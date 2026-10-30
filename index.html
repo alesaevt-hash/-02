@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр пожарной автоматики</title>
+<style>
+:root {
+  --bg:#10151d;
+  --panel:#1b2430;
+  --panel2:#253142;
+  --text:#f2f5f8;
+  --muted:#aab6c5;
+  --green:#25c46a;
+  --red:#f04444;
+  --yellow:#ffbd36;
+  --blue:#3997ff;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+}
+header {
+  padding:22px 16px;
+  text-align:center;
+  background:#080c12;
+  border-bottom:1px solid #344052;
+}
+header h1 { margin:0 0 8px; font-size:25px; }
+header p { margin:0; color:var(--muted); font-size:13px; }
+main { max-width:1250px; margin:auto; padding:16px; }
+.tabs {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-bottom:16px;
+}
+.tab {
+  padding:13px 7px;
+  border:1px solid #40516a;
+  border-radius:10px;
+  color:white;
+  background:var(--panel);
+  font-weight:bold;
+  cursor:pointer;
+}
+.tab.active { background:#1764ad; border-color:#56aaff; }
+.card {
+  background:var(--panel);
+  border:1px solid #354459;
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:16px;
+}
+h2 { margin:0 0 12px; font-size:20px; }
+h3 { margin:0 0 12px; font-size:16px; }
+.muted { color:var(--muted); font-size:13px; }
+.device-top {
+  display:grid;
+  grid-template-columns:minmax(250px, 1fr) minmax(250px, 1fr);
+  gap:16px;
+  align-items:center;
+}
+.photo-wrap {
+  background:#0a0e14;
+  border:1px solid #3c4a5d;
+  border-radius:12px;
+  padding:12px;
+  min-height:230px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.photo-wrap img {
+  display:block;
+  max-width:100%;
+  max-height:300px;
+  object-fit:contain;
+}
+.photo-fallback {
+  display:none;
+  text-align:center;
+  color:#b7c6d9;
+  padding:35px 10px;
+}
+.photo-fallback strong { display:block; font-size:22px; margin-bottom:8px; }
+.status-panel {
+  display:grid;
+  gap:10px;
+}
+.status-light {
+  padding:13px;
+  border-radius:9px;
+  background:#0c1118;
+  border:1px solid #39485c;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:bold;
+}
+.lamp {
+  width:13px;
+  height:13px;
+  border-radius:50%;
+  background:#526071;
+  flex:none;
+}
+.lamp.green.on { background:var(--green); box-shadow:0 0 12px var(--green); }
+.lamp.red.on { background:var(--red); box-shadow:0 0 12px var(--red); }
+.lamp.yellow.on { background:var(--yellow); box-shadow:0 0 12px var(--yellow); }
+.zone-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+  gap:9px;
+}
+.zone {
+  padding:12px;
+  border:1px solid #3b4b60;
+  border-radius:10px;
+  background:#111923;
+}
+.zone strong { display:block; margin-bottom:8px; }
+.zone-state {
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:9px;
+}
+.zone.fire { border-color:var(--red); background:#351a20; }
+.zone.fault { border-color:var(--yellow); background:#382e19; }
+.zone button { width:100%; margin-top:5px; }
+button {
+  border:0;
+  border-radius:8px;
+  padding:10px 12px;
+  font-weight:bold;
+  cursor:pointer;
+  color:white;
+  background:#40536d;
+}
+button:active { transform:scale(.98); }
+button.red { background:#b72d37; }
+button.green { background:#16844a; }
+button.blue { background:#176bb8; }
+button.yellow { background:#a66b0b; }
+button.gray { background:#465365; }
+button:disabled { opacity:.45; cursor:not-allowed; }
+.button-row { display:flex; flex-wrap:wrap; gap:8px; }
+.button-row button { flex:1; min-width:115px; }
+.device-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:12px;
+}
+.device-box {
+  padding:14px;
+  border:1px solid #3b4b60;
+  border-radius:11px;
+  background:#111923;
+}
+.device-box p { color:var(--muted); font-size:13px; line-height:1.4; }
+.device-box .button-row { margin-top:10px; }
+.signs {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+  gap:10px;
+}
+.sign {
+  min-height:65px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:12px;
+  border-radius:9px;
+  border:2px solid #4a5665;
+  background:#10151d;
+  color:#9ba7b5;
+  font-weight:900;
+  letter-spacing:.4px;
+}
+.sign.active {
+  color:white;
+  background:#a71922;
+  border-color:#ff5353;
+  box-shadow:0 0 17px #e33;
+  animation:blink 1s infinite;
+}
+.sign.warning.active {
+  background:#a46a00;
+  border-color:#ffc34d;
+  box-shadow:0 0 17px #e99b19;
+}
+.sign.green-sign.active {
+  background:#087b44;
+  border-color:#37e88e;
+  box-shadow:0 0 17px #21c875;
+}
+@keyframes blink { 50% { opacity:.35; } }
+.log {
+  max-height:300px;
+  overflow:auto;
+  background:#090e14;
+  border:1px solid #344255;
+  border-radius:9px;
+  padding:10px;
+  font-family:monospace;
+  font-size:12px;
+}
+.log-entry { padding:7px 4px; border-bottom:1px solid #253142; }
+.log-entry.fire { color:#ff7373; }
+.log-entry.fault { color:#ffd16b; }
+.log-entry.normal { color:#6ce6a0; }
+.log-entry.info { color:#a9cfff; }
+.sound-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+}
+input[type=range] { width:130px; }
+.timer {
+  font-size:30px;
+  font-weight:bold;
+  color:var(--yellow);
+  text-align:center;
+  padding:12px;
+}
+footer {
+  color:#8d9aaa;
+  text-align:center;
+  padding:20px;
+  font-size:12px;
+}
+@media(max-width:700px) {
+  .tabs { grid-template-columns:repeat(2,1fr); }
+  .device-top { grid-template-columns:1fr; }
+  header h1 { font-size:21px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ТРЕНАЖЁР ПОЖАРНОЙ АВТОМАТИКИ</h1>
+  <p>Учебная имитация приборов, шлейфов, извещателей и сигнализации</p>
+</header>
+
+<main>
+  <div class="tabs" id="tabs"></div>
+
+  <section class="card">
+    <div class="device-top">
+      <div class="photo-wrap">
+        <img id="devicePhoto" alt="Фотография прибора">
+        <div class="photo-fallback" id="photoFallback">
+          <strong id="fallbackName"></strong>
+          <span>Фотография временно недоступна</span>
+        </div>
+      </div>
+      <div class="status-panel">
+        <h2 id="deviceName"></h2>
+        <div class="status-light">
+          <span class="lamp green" id="powerLamp"></span>
+          ПИТАНИЕ
+        </div>
+        <div class="status-light">
+          <span class="lamp red" id="fireLamp"></span>
+          ПОЖАР
+        </div>
+        <div class="status-light">
+          <span class="lamp yellow" id="faultLamp"></span>
+          НЕИСПРАВНОСТЬ
+        </div>
+        <div class="status-light">
+          <span class="lamp yellow" id="autoLamp"></span>
+          АВТОМАТИКА
+        </div>
+        <div class="button-row">
+          <button class="green" onclick="resetCurrent()">СБРОС ПРИБОРА</button>
+          <button class="gray" onclick="togglePower()">ПИТАНИЕ ВКЛ/ВЫКЛ</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Шлейфы сигнализации</h2>
+    <p class="muted">Выбери отдельный шлейф и имитируй его состояние.</p>
+    <div class="zone-grid" id="zones"></div>
+  </section>
+
+  <section class="card">
+    <h2>Дополнительные устройства</h2>
+    <p class="muted">На каждом приборе установлены учебные ИПР-513-10 и ИО-102-20. Их действия отображаются в журнале.</p>
+    <div class="device-grid">
+      <div class="device-box">
+        <h3>ИПР-513-10</h3>
+        <p>Ручной пожарный извещатель. Нажатие имитирует пожарное событие в первом шлейфе выбранного прибора.</p>
+        <div class="button-row">
+          <button class="red" onclick="pressIPR()">НАЖАТЬ ИПР</button>
+          <button class="gray" onclick="restoreIPR()">ВОССТАНОВИТЬ</button>
+        </div>
+        <p id="iprStatus">Состояние: дежурный режим</p>
+      </div>
+      <div class="device-box">
+        <h3>ИО-102-20</h3>
+        <p>Охранный магнитоконтактный извещатель. Имитация открытия и закрытия двери.</p>
+        <div class="button-row">
+          <button class="yellow" onclick="openDoor()">ОТКРЫТЬ ДВЕРЬ</button>
+          <button class="gray" onclick="closeDoor()">ЗАКРЫТЬ ДВЕРЬ</button>
+        </div>
+        <p id="doorStatus">Состояние: дверь закрыта</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="asptPanel" style="display:none">
+    <h2>С2000-АСПТ — управление установкой</h2>
+    <p class="muted">Автоматический запуск в тренажёре происходит после пожара во всех трёх шлейфах.</p>
+    <div class="timer" id="asptTimer">ГОТОВНОСТЬ</div>
+    <div class="button-row">
+      <button class="red" onclick="manualStart()">ПУСК</button>
+      <button class="yellow" onclick="cancelAspt()">ОТМЕНА</button>
+      <button class="gray" onclick="resetAspt()">СБРОС АСПТ</button>
+    </div>
+    <p class="muted" id="asptMessage">Ожидание сигнала.</p>
+  </section>
+
+  <section class="card">
+    <h2>Световые табло</h2>
+    <div class="signs">
+      <div class="sign" id="signFire">ПОЖАР</div>
+      <div class="sign green-sign" id="signExit">ВЫХОД</div>
+      <div class="sign warning" id="signLeave">ПОРОШОК УХОДИ</div>
+      <div class="sign" id="signNoEntry">ПОРОШОК НЕ ВХОДИ</div>
+      <div class="sign warning" id="signDisabled">АВТОМАТИКА ОТКЛЮЧЕНА</div>
+      <div class="sign warning" id="signFault">НЕИСПРАВНОСТЬ</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Звуковое сопровождение</h2>
+    <div class="sound-row">
+      <button class="blue" id="soundButton" onclick="toggleSound()">ЗВУК ВКЛЮЧЁН</button>
+      <label>Громкость <input id="volume" type="range" min="0" max="100" value="45"></label>
+      <button class="gray" onclick="testSound()">ПРОВЕРКА ЗВУКА</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Журнал событий</h2>
+    <div class="button-row" style="margin-bottom:10px">
+      <button class="gray" onclick="clearLog()">ОЧИСТИТЬ ЖУРНАЛ</button>
+      <button class="blue" onclick="exportLog()">СКАЧАТЬ ЖУРНАЛ</button>
+    </div>
+    <div class="log" id="log"></div>
+  </section>
+</main>
+
+<footer>
+  Тренажёр предназначен только для обучения. Все состояния и сигналы программные.
+  Не подключайте этот сайт к реальным системам пожарной автоматики.
+</footer>
+
+<script>
+const devices = [
+  {
+    name:"ВЭРС-ПК 16",
+    zones:16,
+    photo:"https://teko-shop.ru/upload/iblock/adf/v6nq6v7zyes0zv4kwjr4hrtvb2ws7tuh/b521ad45-1830-11e9-bb95-00155d0a1f05_df2f93fa-dd2a-11ea-bed2-00155d0a1f06.jpeg"
+  },
+  {
+    name:"ГРАНИТ-6",
+    zones:6,
+    photo:"https://www.planeta-b.ru/UserFiles/Image/Pkp_op/Signalizaciya_ops/img9925_65389_big.png"
+  },
+  {
+    name:"БОЛИД С2000-М",
+    zones:12,
+    photo:"https://www.freecom.ru/upload/iblock/dea/ub2w18cb1mnuemt0d87q0gvbjmnqpvje.png"
+  },
+  {
+    name:"БОЛИД С2000-АСПТ",
+    zones:3,
+    photo:"https://images.satu.kz/6383641_w1280_h640_6383641.jpg"
+  }
+];
+
+let current = 0;
+let soundEnabled = true;
+let audioContext = null;
+let volume = 0.45;
+let doorOpened = [false,false,false,false];
+let iprPressed = [false,false,false,false];
+let powerOn = [true,true,true,true];
+let asptState = "normal";
+let asptSeconds = 20;
+let asptInterval = null;
+let asptStartedManually = false;
+let events = [];
+
+const states = devices.map(d => Array(d.zones).fill("normal"));
+
+function now() {
+  return new Date().toLocaleTimeString("ru-RU");
+}
+
+function logEvent(message,type="info") {
+  const entry = {time:now(), message, type, device:devices[current].name};
+  events.unshift(entry);
+  if(events.length > 300) events.pop();
+
+  const el = document.createElement("div");
+  el.className = "log-entry " + type;
+  el.textContent = "[" + entry.time + "] [" + entry.device + "] " + message;
+  document.getElementById("log").prepend(el);
+}
+
+function renderTabs() {
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = "";
+  devices.forEach((d,i) => {
+    const b = document.createElement("button");
+    b.className = "tab" + (i===current ? " active" : "");
+    b.textContent = d.name;
+    b.onclick = () => {
+      current = i;
+      render();
+      logEvent("Открыта панель " + d.name);
+    };
+    tabs.appendChild(b);
+  });
+}
+
+function renderPhoto() {
+  const img = document.getElementById("devicePhoto");
+  const fallback = document.getElementById("photoFallback");
+  document.getElementById("fallbackName").textContent = devices[current].name;
+  img.style.display = "block";
+  fallback.style.display = "none";
+  img.onerror = () => {
+    img.style.display = "none";
+    fallback.style.display = "block";
+  };
+  img.src = devices[current].photo;
+}
+
+function renderZones() {
+  const wrap = document.getElementById("zones");
+  wrap.innerHTML = "";
+  states[current].forEach((state,i) => {
+    const box = document.createElement("div");
+    box.className = "zone" + (state==="fire" ? " fire" : state==="fault" ? " fault" : "");
+    const status = state==="fire" ? "ПОЖАР" : state==="fault" ? "НЕИСПРАВНОСТЬ" : "НОРМА";
+    box.innerHTML = `
+      <strong>ШС ${i+1}</strong>
+      <span class="zone-state">${status}</span>
+      <button class="red" onclick="setZone(${i},'fire')">ПОЖАР</button>
+      <button class="yellow" onclick="setZone(${i},'fault')">НЕИСПРАВНОСТЬ</button>
+      <button class="green" onclick="setZone(${i},'normal')">НОРМА</button>
+    `;
+    wrap.appendChild(box);
+  });
+}
+
+function isAnyFire() {
+  return states[current].some(s => s==="fire");
+}
+function isAnyFault() {
+  return states[current].some(s => s==="fault");
+}
+function isAspt() { return current===3; }
+
+function renderStatus() {
+  document.getElementById("powerLamp").classList.toggle("on",powerOn[current]);
+  document.getElementById("fireLamp").classList.toggle("on",isAnyFire());
+  document.getElementById("faultLamp").classList.toggle("on",isAnyFault());
+  document.getElementById("autoLamp").classList.toggle("on",isAspt() && asptState!=="normal");
+}
+
+function renderSigns() {
+  const fire = isAnyFire();
+  const fault = isAnyFault();
+
+  document.getElementById("signFire").classList.toggle("active",fire);
+  document.getElementById("signExit").classList.toggle("active",fire);
+  document.getElementById("signFault").classList.toggle("active",fault);
+
+  const isRelease = isAspt() && asptState==="release";
+  const isDelay = isAspt() && asptState==="delay";
+  const isCancelled = isAspt() && asptState==="cancelled";
+
+  document.getElementById("signLeave").classList.toggle("active",isDelay);
+  document.getElementById("signNoEntry").classList.toggle("active",isRelease);
+  document.getElementById("signDisabled").classList.toggle("active",isRelease || isCancelled || (isAspt() && !powerOn[3]));
+}
+
+function renderDevices() {
+  document.getElementById("iprStatus").textContent =
+    iprPressed[current] ? "Состояние: НАЖАТ, пожарный сигнал" : "Состояние: дежурный режим";
+  document.getElementById("doorStatus").textContent =
+    doorOpened[current] ? "Состояние: ДВЕРЬ ОТКРЫТА" : "Состояние: дверь закрыта";
+}
+
+function renderAspt() {
+  const panel = document.getElementById("asptPanel");
+  panel.style.display = isAspt() ? "block" : "none";
+  if(!isAspt()) return;
+
+  const timer = document.getElementById("asptTimer");
+  const message = document.getElementById("asptMessage");
+
+  if(asptState==="normal") {
+    timer.textContent = "ГОТОВНОСТЬ";
+    message.textContent = "Ожидание сигнала.";
+  } else if(asptState==="delay") {
+    timer.textContent = asptSeconds + " сек.";
+    message.textContent = "Предупреждение: ПОРОШОК УХОДИ.";
+  } else if(asptState==="release") {
+    timer.textContent = "ЗАПУСК";
+    message.textContent = "Имитация запуска. ПОРОШОК НЕ ВХОДИ.";
+  } else if(asptState==="cancelled") {
+    timer.textContent = "ОТМЕНА";
+    message.textContent = "Автоматический сценарий отменён. Требуется сброс.";
+  }
+}
+
+function render() {
+  renderTabs();
+  document.getElementById("deviceName").textContent = devices[current].name;
+  renderPhoto();
+  renderZones();
+  renderStatus();
+  renderDevices();
+  renderAspt();
+  renderSigns();
+}
+
+function playTone(freq=700,duration=180,type="sine") {
+  if(!soundEnabled || volume<=0) return;
+  try {
+    audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume * 0.18;
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start();
+    gain.gain.setTargetAtTime(0,audioContext.currentTime+duration/1000,0.04);
+    osc.stop(audioContext.currentTime+duration/1000+0.1);
+  } catch(e) {}
+}
+
+function alarmSound() {
+  playTone(880,180,"square");
+  setTimeout(()=>playTone(660,180,"square"),220);
+}
+function faultSound() {
+  playTone(420,300,"triangle");
+}
+function clickSound() {
+  playTone(950,55,"sine");
+}
+
+function setZone(index,state) {
+  if(!powerOn[current]) {
+    logEvent("Нельзя изменить ШС: питание выключено","fault");
+    faultSound();
+    return;
+  }
+  const old = states[current][index];
+  states[current][index] = state;
+  if(old!==state) {
+    const label = state==="fire" ? "ПОЖАР" : state==="fault" ? "НЕИСПРАВНОСТЬ" : "ВОССТАНОВЛЕНИЕ НОРМЫ";
+    logEvent("ШС " + (index+1) + ": " + label,state==="fire" ? "fire" : state==="fault" ? "fault" : "normal");
+    if(state==="fire") alarmSound();
+    else if(state==="fault") faultSound();
+    else clickSound();
+  }
+  if(current===3) checkAutomaticAspt();
+  render();
+}
+
+function pressIPR() {
+  if(iprPressed[current]) {
+    logEvent("ИПР-513-10 уже нажат","fault");
+    return;
+  }
+  iprPressed[current] = true;
+  logEvent("ИПР-513-10: ручной извещатель НАЖАТ","fire");
+  alarmSound();
+  if(powerOn[current]) setZone(0,"fire");
+  renderDevices();
+}
+
+function restoreIPR() {
+  if(!iprPressed[current]) return;
+  iprPressed[current] = false;
+  logEvent("ИПР-513-10: восстановлен в дежурный режим","normal");
+  if(states[current][0]==="fire") setZone(0,"normal");
+  renderDevices();
+}
+
+function openDoor() {
+  if(doorOpened[current]) return;
+  doorOpened[current] = true;
+  logEvent("ИО-102-20: дверь ОТКРЫТА","fault");
+  faultSound();
+  renderDevices();
+}
+
+function closeDoor() {
+  if(!doorOpened[current]) return;
+  doorOpened[current] = false;
+  logEvent("ИО-102-20: дверь ЗАКРЫТА","normal");
+  clickSound();
+  renderDevices();
+}
+
+function togglePower() {
+  powerOn[current] = !powerOn[current];
+  logEvent("Питание " + (powerOn[current] ? "включено" : "выключено"),powerOn[current] ? "normal" : "fault");
+  if(!powerOn[current] && current===3) cancelAspt();
+  render();
+}
+
+function resetCurrent() {
+  states[current].fill("normal");
+  iprPressed[current] = false;
+  doorOpened[current] = false;
+  if(current===3) resetAspt();
+  logEvent("Выполнен сброс прибора","normal");
+  clickSound();
+  render();
+}
+
+function allThreeAsptFire() {
+  return states[3].length===3 && states[3].every(s=>s==="fire");
+}
+
+function checkAutomaticAspt() {
+  if(!allThreeAsptFire()) {
+    if(asptState==="delay" && !asptStartedManually) {
+      stopAsptTimer();
+      asptState = "normal";
+      logEvent("Автоматический запуск отменён: не все три ШС находятся в состоянии ПОЖАР","info");
+    }
+    renderAspt();
+    renderSigns();
+    return;
+  }
+  if(asptState==="normal") startAsptDelay(false);
+}
+
+function startAsptDelay(manual) {
+  if(!powerOn[3]) {
+    logEvent("ПУСК невозможен: питание отключено","fault");
+    return;
+  }
+  if(asptState==="delay" || asptState==="release") return;
+
+  stopAsptTimer();
+  asptStartedManually = manual;
+  asptState = "delay";
+  asptSeconds = 20;
+  logEvent(manual ? "АСПТ: нажатие кнопки ПУСК" : "АСПТ: все три ШС в состоянии ПОЖАР. Началась задержка 20 секунд","fire");
+  alarmSound();
+  render();
+
+  asptInterval = setInterval(() => {
+    asptSeconds--;
+    renderAspt();
+    if(asptSeconds<=0) finishAspt();
+  },1000);
+}
+
+function finishAspt() {
+  stopAsptTimer();
+  asptState = "release";
+  logEvent("АСПТ: завершена задержка. Имитация команды запуска","fire");
+  alarmSound();
+  render();
+}
+
+function manualStart() {
+  if(asptState==="release") {
+    logEvent("АСПТ уже находится в состоянии запуска","info");
+    return;
+  }
+  startAsptDelay(true);
+}
+
+function cancelAspt() {
+  if(asptState!=="delay") {
+    logEvent("АСПТ: отменять нечего","info");
+    return;
+  }
+  stopAsptTimer();
+  asptState = "cancelled";
+  logEvent("АСПТ: задержка отменена кнопкой ОТМЕНА","fault");
+  faultSound();
+  render();
+}
+
+function resetAspt() {
+  stopAsptTimer();
+  asptState = "normal";
+  asptSeconds = 20;
+  asptStartedManually = false;
+  logEvent("АСПТ: выполнен сброс сценария","normal");
+  render();
+}
+
+function stopAsptTimer() {
+  if(asptInterval) clearInterval(asptInterval);
+  asptInterval = null;
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById("soundButton").textContent =
+    soundEnabled ? "ЗВУК ВКЛЮЧЁН" : "ЗВУК ВЫКЛЮЧЕН";
+  if(soundEnabled) clickSound();
+}
+
+function testSound() {
+  playTone(550,150);
+  setTimeout(()=>playTone(750,150),220);
+  setTimeout(()=>playTone(950,150),440);
+}
+
+document.getElementById("volume").addEventListener("input",e=>{
+  volume = Number(e.target.value)/100;
+});
+
+function clearLog() {
+  events = [];
+  document.getElementById("log").innerHTML = "";
+  logEvent("Журнал очищен","info");
+}
+
+function exportLog() {
+  const textData = events.slice().reverse().map(e=>
+    "["+e.time+"] ["+e.device+"] "+e.message
+  ).join("\n");
+  const blob = new Blob([textData],{type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "zhurnal-pozharnoy-avtomatiki.txt";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+render();
+logEvent("Тренажёр запущен","info");
+</script>
+</body>
+</html>
